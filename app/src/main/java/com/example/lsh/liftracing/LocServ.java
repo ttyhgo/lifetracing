@@ -31,6 +31,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +45,7 @@ import java.util.TimerTask;
  */
 public class LocServ extends Service implements LocationListener {
 
-    private static String url_insert_location = "http://192.168.0.38:8080/Test";
+    private static String url_insert_location = "http://172.30.1.37:8080/Test";
     public static String LOG = "Log";
 
     JSONParser jsonParser = new JSONParser();
@@ -238,16 +240,18 @@ public class LocServ extends Service implements LocationListener {
 
 
     public static HttpResponse makeRequest(String uri, String json) {
+        StringBuilder content = new StringBuilder();
+
+
         try {
-            HttpPost httpPost = new HttpPost(uri);
-            httpPost.setEntity(new StringEntity(json));
-            httpPost.setHeader("Accept", "application/json");
-            httpPost.setHeader("Content-type", "application/json");
-            return new DefaultHttpClient().execute(httpPost);
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        } catch (ClientProtocolException e) {
-            e.printStackTrace();
+            URL url = new URL("http://172.30.1.37:8080/Test?data="+json);
+            BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+            String str;
+            while ((str = in.readLine()) != null) {
+                content.append(str +"\n");
+            }
+            in.close();
+        } catch (MalformedURLException e){
         } catch (IOException e) {
             e.printStackTrace();
         }
