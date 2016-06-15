@@ -1,6 +1,5 @@
 package com.example.lsh.liftracing;
 
-import android.app.IntentService;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,46 +8,26 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.message.BasicNameValuePair;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  * Created by BrijD on 14-12-22.
  */
 public class LocServ extends Service implements LocationListener {
 
-    private static String url_insert_location = "http://172.30.1.37:8080/Test";
+    private static String url_insert_location = "ec2-52-78-48-163.ap-northeast-2.compute.amazonaws.com:8080/server/save";
     public static String LOG = "Log";
-
-    JSONParser jsonParser = new JSONParser();
 
     private final Context mContext;
 
@@ -128,16 +107,13 @@ public class LocServ extends Service implements LocationListener {
                 // Building Parameters
                 Log.d("value", lati);
                 Log.d("value", longi);
-                ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-                params.add(new BasicNameValuePair("longitude", longi));
-                params.add(new BasicNameValuePair("latitude", lati));
 
                 // getting JSON Object
                 // Note that create product url accepts POST method
                 JSONObject jsonObject = new JSONObject();
-                jsonObject.put("Longi", longi);
+                jsonObject.put("Lon", longi);
                 jsonObject.put("Lat", lati);
-                makeRequest(url_insert_location, jsonObject.toString());
+                makeRequest(url_insert_location, jsonObject);
                 //JSONObject json = jsonParser.makeHttpRequest(url_insert_location, "GET", params);
                 Log.d("Create Response", jsonObject.toString());
 
@@ -147,8 +123,6 @@ public class LocServ extends Service implements LocationListener {
 
             return "call";
         }
-
-
 
     }
 
@@ -219,8 +193,6 @@ public class LocServ extends Service implements LocationListener {
     public void onLocationChanged(Location location) {
 //this will be called every second
         new SendToServer().execute(Double.toString(getLocation().getLongitude()),Double.toString(getLocation().getLatitude()));
-
-
     }
 
     @Override
@@ -239,23 +211,27 @@ public class LocServ extends Service implements LocationListener {
     }
 
 
-    public static HttpResponse makeRequest(String uri, String json) {
+    public static void makeRequest(String uri, JSONObject json) {
         StringBuilder content = new StringBuilder();
-
-
+        Log.d("in","ok1");
         try {
-            URL url = new URL("http://172.30.1.37:8080/Test?data="+json);
+            URL url = new URL("http://"+url_insert_location+"?Lon="+json.getString("Lon")+"&Lat"+"="+json.getString("Lat"));
+            Log.d("url","http://"+url_insert_location+"?Lon="+json.getString("Lon")+"&Lat"+"="+json.getString("Lat"));
             BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
             String str;
             while ((str = in.readLine()) != null) {
                 content.append(str +"\n");
             }
+            Log.d("response", content.toString());
             in.close();
         } catch (MalformedURLException e){
         } catch (IOException e) {
             e.printStackTrace();
+        }catch (JSONException e){
+            e.printStackTrace();
         }
-        return null;
+        Log.d("in","ok2");
+        return;
     }
 
 
